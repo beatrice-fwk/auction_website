@@ -1,0 +1,41 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+	<div class="listing-detail" style="border: 1px solid #ccc; border-radius: 8px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); background: #fff; max-width: 600px;">
+		<h2 style="margin-top: 0; color: #2c3e50;">{{ listing.title }}</h2>
+		<p style="color: #555;">{{ listing.description }}</p>
+		{% if listing.image_url %}
+			<img src="{{ listing.image_url }}" alt="Listing Image" style="max-width: 100%; height: auto; border-radius: 4px; margin-bottom: 8px;">
+		{% endif %}
+		<p><strong>Category:</strong> {{ listing.category }}</p>
+		<p><strong>Owner:</strong> {{ listing.owner.username }}</p>
+		<p><strong>Created At:</strong> {{ listing.created_at }}</p>
+		<p><strong>Status:</strong> {% if listing.active %}Active{% else %}Closed{% endif %}</p>
+		<p><strong>Starting Bid:</strong> {{ listing.starting_bid }}</p>
+		<p><strong>Current Bid:</strong> {{ current_bid }}</p>
+
+		{# Watchlist button logic #}
+		{% if user.is_authenticated %}
+			<form action="{% url 'watchlist' listing.id %}" method="post" style="display:inline;">
+				{% csrf_token %}
+				{% if user in listing.watchlist.all %}
+					<button type="submit">Remove from Watchlist</button>
+				{% else %}
+					<button type="submit">Add to Watchlist</button>
+				{% endif %}
+			</form>
+		{% endif %}
+
+		{# Display message if present #}
+		{% if message %}
+			<div class="alert alert-info" style="margin-top: 16px;">{{ message }}</div>
+		{% endif %}
+
+		<form action="{% url 'bid' %}" method="post" style="margin-top: 16px;">
+			{% csrf_token %}
+			<input type="hidden" name="listing_id" value="{{ listing.id }}">
+			<input type="number" name="bid_amount" placeholder="Enter your bid" required>
+			<button type="submit">Place Bid</button>
+		</form>
+	</div>
+{% endblock %}
