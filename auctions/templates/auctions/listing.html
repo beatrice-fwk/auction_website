@@ -37,5 +37,34 @@
 			<input type="number" name="bid_amount" placeholder="Enter your bid" required>
 			<button type="submit">Place Bid</button>
 		</form>
+
+		<form action="{% url 'close'listing.id %}" method="post">
+			{% csrf_token %}
+		    <input type="hidden" name="listing_id" value="{{ listing.id }}">
+			<button type="submit">Close bid</button>
+		</form>
+
+		<form action="{% url 'user_won'listing.id %}" method="post">
+			{% csrf_token %}
+		    <input type="hidden" name="listing_id" value="{{ listing.id }}">
+			{{message}}
+		</form>	
+
+		<form action="{% url 'comment'listing.id %}" method="post">
+			{% csrf_token %}
+		    <input type="text" name="comment" placeholder="Add a comment here">
+			<button type="submit">Post Comment</button>
+
+			<ul>
+                {% for comment in comments %}
+                    <li>
+                        <strong>{{ comment.commenter.username }}</strong>: {{ comment.content }} 
+                        <small>({{ comment.timestamp|date:"M d, Y H:i" }})</small>
+                    </li>
+                    {% empty %}
+                    <li>No comments yet. Be the first to comment!</li>
+                {% endfor %}
+            </ul>
+		</form>	
 	</div>
 {% endblock %}

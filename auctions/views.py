@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
-from .models import User, Auction, Bid
+from .models import User, Auction, Bid, Comment
 
 
 def index(request):
@@ -143,4 +143,66 @@ def bid(request):
         })
 
     return render(request, "auctions/listing.html")
-       
+
+@login_required 
+def close(request):
+    if request.method == "POST":
+        listing_id = request.POST.get("listing_id")
+        listing = get_object_or_404(Auction, id=listing_id)
+        
+        if request.user != listing.owner:
+            return HttpResponse("You are not allowed to close this auction. Return to the listing page")
+            
+        if listing.active == False:
+            return render(request,"auctions/listing.html",{
+                "listing": listing,
+                "message": "Auction is  arleady closed "
+            })
+                
+        highest_bid = listing.bids.order_by("-amount").first()
+        
+        if highest_bid:
+            listing.winner = highest_bid.bidder
+            
+        listing.active = False
+        listing.save()
+        return render(request, "auctions/listing.html", {
+            "listing": listing,
+            "message": "Auction Closed Successfully"
+        })
+                
+    return render(request, "auctions/listing.html")   
+
+@login_required 
+def user_won(request):
+    if request.method == "POST":
+        listing_id = request.POST.get("listing_id")
+        listing = get_object_or_404(Auction, id=listing_id)
+        winner = listing.winner 
+        listing.active = False 
+    
+        if request.user == winner:
+            return render(request, "auctions/listing.html", {
+                "listing": listing,
+                "message": "You have won the auction"
+            }) 
+    
+    return render(request, "auctions/listing.html")   
+
+@login_required
+def comment(request, listing_id):
+    if request.method == "POST":
+        content = request.POST["comment"]
+        listing = get_object_or_404(Auction, id=listing_id)
+        
+        if content:
+            comment = Comment(
+                auction=listing,
+                commenter = request.user,
+                content = content,    
+            )
+            comment.save()
+        return redirect('comment', listing_id=listing.id)
+        
+        
+    return render(request, "auctions/listing.html")   
